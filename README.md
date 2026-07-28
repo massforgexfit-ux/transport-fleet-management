@@ -1,122 +1,108 @@
-# Transport Fleet Management System
-## Système de Gestion de Parc Automobile d'une Entreprise de Transport
+# Gestion PDR - Maintenance Conditionnement
 
-### 📋 Description
+Application Java 17 Swing/JDBC/MySQL pour l'amélioration de la consommation des pièces de rechange au service Maintenance Conditionnement.
 
-Ce projet est une application complète en Java pour la gestion d'un parc automobile d'une entreprise de transport. Il implémente tous les éléments définis dans le diagramme de classe UML fourni.
+## Données analysées
 
-### 🏗️ Architecture du Projet
+Les fichiers CSV reçus contiennent :
 
+- un sommaire d'interventions ;
+- un catalogue principal de 1 018 pièces (`sara2`) ;
+- des feuilles de stock requis par intervention.
+
+La table `PieceRechange` est construite à partir des colonnes du catalogue :
+
+- `Code article`
+- `Description de la pièce et outil`
+- `Unité`
+- `Groupe d'articles`
+- `Qté consommée (historique)`
+- `Sous-ensemble (réf. plan)`
+- `Réf. constructeur`
+- `Pièce d'usure`
+
+Deux colonnes de gestion sont ajoutées pour les fonctions de stock : `stock_actuel` et `stock_minimum`.
+
+## Technologies
+
+- Java 17
+- Swing
+- JDBC
+- MySQL
+- Apache POI
+- Maven
+- Architecture MVC + DAO
+
+## Fonctionnalités
+
+- Gestion des pièces : importer, ajouter, modifier, supprimer, rechercher, afficher, consulter le stock.
+- Import automatique depuis Excel `.xls/.xlsx` avec Apache POI.
+- Import CSV compatible avec les fichiers fournis.
+- Gestion des entrées : augmentation automatique du stock.
+- Gestion des sorties : diminution automatique du stock et blocage si la sortie dépasse le stock disponible.
+- CRUD complet Machines.
+- CRUD complet Techniciens.
+- Alertes automatiques si `stock_actuel <= stock_minimum`.
+
+## Tables MySQL
+
+Uniquement les tables demandées sont créées :
+
+- `PieceRechange`
+- `EntreeStock`
+- `SortieStock`
+- `Machine`
+- `Technicien`
+- `AlerteStock`
+
+Le script SQL est disponible dans `database/schema.sql`.
+
+## Configuration MySQL
+
+Par défaut, l'application utilise :
+
+```text
+URL      : jdbc:mysql://localhost:3306/pdr_maintenance?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+User     : root
+Password :
 ```
-src/main/java/com/transport/
-├── Main.java                           # Classe principale - démonstration
-├── model/                              # Modèles de données
-│   ├── ParcAuto.java                   # Gestion du parc
-│   ├── Vehicle.java                    # Classe abstraite de base
-│   ├── Camion.java                     # Type: Camion
-│   ├── Voiture.java                    # Type: Voiture
-│   ├── Bus.java                        # Type: Bus
-│   ├── TypeVehicule.java               # Énumération des types
-│   ├── Utilisateur.java                # Classe abstraite utilisateur
-│   ├── Chauffeur.java                  # Type: Chauffeur
-│   ├── Mission.java                    # Gestion des missions
-│   ├── Maintenance.java                # Gestion de la maintenance
-│   └── Carburant.java                  # Gestion du carburant
-└── service/                            # Services métier
-    └── ParcAutoService.java            # Service principal
-```
 
-### ✨ Fonctionnalités
-
-#### 1. **Gestion des Véhicules**
-- Ajout, suppression et recherche de véhicules
-- Trois types de véhicules: Camion, Voiture, Bus
-- Suivi du statut (actif, maintenance, hors service)
-- Gestion du kilométrage et des informations techniques
-
-#### 2. **Gestion des Chauffeurs**
-- Création et gestion des profils chauffeurs
-- Suivi des permis et disponibilités
-- Assignation aux missions
-- Acceptation/Refus de missions
-
-#### 3. **Gestion des Missions**
-- Création de missions avec dates et destinations
-- Affectation de véhicules et chauffeurs
-- Suivi du statut (programmée, en cours, terminée)
-- Démarrage et termination des missions
-
-#### 4. **Gestion de la Maintenance**
-- Planification des maintenances
-- Enregistrement des coûts
-- Historique des interventions
-- Suivi du statut des véhicules
-
-#### 5. **Gestion du Carburant**
-- Suivi de la consommation
-- Calcul des coûts
-- Support de multiples types de carburant
-
-### 🚀 Installation et Utilisation
-
-#### Prérequis
-- Java 11 ou supérieur
-- Maven 3.6+
-
-#### Étapes d'installation
+Vous pouvez modifier ces valeurs avec des variables d'environnement ou propriétés Java :
 
 ```bash
-# Cloner le projet
-git clone https://github.com/massforgexfit-ux/transport-fleet-management.git
-cd transport-fleet-management
+export PDR_DB_URL="jdbc:mysql://localhost:3306/pdr_maintenance?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+export PDR_DB_USER="root"
+export PDR_DB_PASSWORD="votre_mot_de_passe"
+```
 
-# Compiler le projet
+Créer la base avant le lancement :
+
+```sql
+CREATE DATABASE IF NOT EXISTS pdr_maintenance CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Les tables sont créées automatiquement au démarrage.
+
+## Compilation et exécution
+
+```bash
 mvn clean compile
-
-# Exécuter l'application
-mvn exec:java -Dexec.mainClass="com.transport.Main"
+mvn exec:java
 ```
 
-### 📊 Diagramme de Classe UML
+Classe principale :
 
-Le projet implémente exactement le diagramme fourni avec:
-- Hiérarchie de classe Vehicle (abstraite)
-- Hiérarchie de classe Utilisateur (abstraite)
-- Relations d'association et de composition
-- Tous les attributs et méthodes spécifiés
-
-### 📝 Exemple d'Utilisation
-
-```java
-// Initialisation
-ParcAutoService service = new ParcAutoService();
-ParcAuto parc = new ParcAuto(1, "Parc Principal", "Paris");
-
-// Ajout d'un camion
-Camion camion = new Camion(1, "AB-123-CD", "Renault", "T-High", 
-                           2022, 5000, "actif", 25.0, "Marchandises");
-service.ajouterVehicule(1, camion);
-
-// Création d'une mission
-Mission mission = new Mission(1, LocalDate.now(), 
-                              LocalDate.now().plusDays(2), "Lyon");
-service.creerMission(mission);
-
-// Affectation
-service.affecterVehiculeEtChauffeur(1, 1, 1);
-mission.demarrerMission();
+```text
+com.pdr.App
 ```
 
-### 🔧 Structure des Classes Principales
+## Utilisation Eclipse
 
-#### ParcAuto
-- Gère une collection de véhicules
-- Méthodes: ajouterVehicule(), listerVehicules(), rechercherVehicule()
-
-#### Vehicle (abstraite)
-- Classe de base pour tous les véhicules
-- Attributs communs: immatriculation, marque, modèle, statut
-- Méthodes abstraites: demarrer(), arreter()
+1. Importer le projet comme `Existing Maven Project`.
+2. Configurer Java 17.
+3. Vérifier la connexion MySQL.
+4. Lancer `com.pdr.App`.
+5. Menu `Pièces` > `Importer Excel/CSV` pour charger le catalogue.
 
 #### Chauffeur extends Utilisateur
 - Manage de missions
